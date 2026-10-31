@@ -119,7 +119,7 @@
   .modal label { display: block; font-size: 13px; font-weight: bold; margin-bottom: 4px; color: var(--text-sub); }
   .modal input[type="text"] { width: 100%; border: 1px solid var(--border); border-radius: 6px; padding: 10px; margin-bottom: 16px; font-size: 14px; }
   .modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
-  .btn-modal { padding: 10px 16px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center;}
+  .btn-modal { padding: 12px 16px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; min-height: 44px; }
   .btn-modal.cancel { background: var(--bg-main); color: var(--text-main); }
   .btn-modal.save { background: var(--primary); color: #fff; }
   
@@ -140,7 +140,7 @@
     <div class="header-top">
       <div class="header-title">캔톤페어 3기 체크리스트</div>
       <div class="header-actions">
-        <button class="icon-btn" id="btn-export" title="CSV 내보내기">📄</button>
+        <button class="icon-btn" id="btn-export" title="CSV 공유/내보내기">📄</button>
         <button class="icon-btn" id="btn-download-photos" title="사진 일괄 다운로드">🖼️</button>
         <button class="icon-btn" id="btn-settings" title="설정 및 백업">⚙️</button>
       </div>
@@ -170,14 +170,16 @@
     </div>
 
     <div class="modal-divider"></div>
-    <h4 style="margin-bottom:8px; font-size:15px; color:var(--text-main);">💾 전체 데이터 이동 (PC에서 보기)</h4>
+    <h4 style="margin-bottom:8px; font-size:15px; color:var(--text-main);">📲 아이폰 ➔ 카톡/슬랙/메일로 백업 전송</h4>
     <div style="font-size: 12px; color: var(--text-sub); margin-bottom: 12px; line-height:1.4;">
-      모바일의 텍스트와 사진을 하나의 파일(.json)로 묶어 내보냅니다. 해당 파일을 PC로 전송한 뒤, PC 화면에서 불러오기를 누르면 똑같은 화면을 볼 수 있습니다.
+      모바일의 텍스트와 사진 전체를 하나의 백업 파일(.json)로 묶어 **카카오톡(나에게 보내기), 슬랙, 메일**로 즉시 공유합니다. PC에서 해당 파일을 다운받아 아래 'PC에서 불러오기'를 누르면 똑같이 열립니다.
     </div>
-    <div style="display: flex; gap: 8px; margin-bottom: 10px;">
-      <button class="btn-modal" id="btn-backup-json" style="flex: 1; background: var(--text-main); color: #fff; font-size: 13px;">📦 백업본 내보내기</button>
-      <label class="btn-modal" style="flex: 1; background: var(--green); color: #fff; font-size: 13px; cursor: pointer;">
-        📥 PC에서 불러오기
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <button class="btn-modal" id="btn-backup-json" style="background: #2563eb; color: #fff; font-size: 14px;">
+        📤 카톡 / 슬랙 / 메일로 백업 보내기
+      </button>
+      <label class="btn-modal" style="background: var(--green); color: #fff; font-size: 14px; cursor: pointer;">
+        📥 백업 파일(.json) 불러오기
         <input type="file" id="inp-restore-json" accept=".json" hidden>
       </label>
     </div>
@@ -546,7 +548,7 @@ document.getElementById('app').addEventListener('click', async (e) => {
       group.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
       target.classList.add('active');
     }
-    return;
+    return; 
   }
   
   if (act === 'del-photo') { 
@@ -641,6 +643,27 @@ document.getElementById('app').addEventListener('change', async (e) => {
   }
 });
 
+// --- [공통 파일 내보내기/공유 헬퍼 함수] ---
+async function shareOrDownloadFile(file, title, text) {
+  // 아이폰/스마트폰 Web Share 지원 시 카카오톡, 슬랙, 메일 공유창 띄우기
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try {
+      await navigator.share({ files: [file], title: title, text: text });
+      return;
+    } catch(err) {
+      if (err.name === 'AbortError') return; // 사용자가 창을 닫은 경우
+    }
+  }
+  // 미지원 환경이거나 데스크톱인 경우 직접 다운로드
+  const url = URL.createObjectURL(file);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = file.name;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// --- [CSV 내보내기 및 공유] ---
 function escapeCsv(str) { return `"${(str || '').toString().replace(/"/g, '""')}"`; }
 function formatAns(q, ans) {
   if (q.type === 'C') return Array.isArray(ans) ? ans.join(';') : '';
@@ -666,10 +689,9 @@ document.getElementById('btn-export').addEventListener('click', async () => {
       });
     }
   }
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-  a.download = `canton_fair_checklist_${new Date().toISOString().slice(0,10).replace(/-/g,'')}.csv`;
-  a.click();
+  const dateStr = new Date().toISOString().slice(0,10).replace(/-/g,'');
+  const file = new File([csv], `canton_fair_checklist_${dateStr}.csv`, { type: 'text/csv;charset=utf-8;' });
+  await shareOrDownloadFile(file, '캔톤페어 체크리스트 CSV', '캔톤페어 현장 체크리스트 CSV 요약본입니다.');
 });
 
 document.getElementById('btn-download-photos').addEventListener('click', async () => {
@@ -689,7 +711,7 @@ document.getElementById('btn-download-photos').addEventListener('click', async (
   }
 });
 
-// --- [백업 및 복원 로직 추가] ---
+// --- [JSON 백업 (아이폰 카톡/슬랙/메일 공유 지원)] ---
 function blobToBase64(blob) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -700,7 +722,7 @@ function blobToBase64(blob) {
 }
 
 document.getElementById('btn-backup-json').addEventListener('click', async () => {
-  showToast('데이터 압축 중입니다. 사진이 많으면 잠시 멈춘 것처럼 보일 수 있습니다.');
+  showToast('백업 준비 중... 잠시만 기다려주세요.');
   setTimeout(async () => {
     try {
       const photos = await IDB.getAllPhotos();
@@ -710,12 +732,10 @@ document.getElementById('btn-backup-json').addEventListener('click', async () =>
       })));
       
       const backup = { appState: appState, photos: photoData };
-      const blob = new Blob([JSON.stringify(backup)], {type: 'application/json'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href = url;
-      a.download = `canton_backup_${new Date().toISOString().slice(0,10).replace(/-/g,'')}.json`;
-      a.click(); URL.revokeObjectURL(url);
-      showToast('백업 파일(.json) 다운로드 완료!');
+      const dateStr = new Date().toISOString().slice(0,10).replace(/-/g,'');
+      const file = new File([JSON.stringify(backup)], `canton_backup_${dateStr}.json`, { type: 'application/json' });
+      
+      await shareOrDownloadFile(file, '캔톤페어 전체 백업 데이터', '캔톤페어 체크리스트 및 사진 전체 백업 파일입니다.');
     } catch(e) {
       console.error(e); showToast('백업 중 오류가 발생했습니다.');
     }
@@ -756,7 +776,7 @@ document.getElementById('inp-restore-json').addEventListener('change', async (e)
   reader.readAsText(file);
 });
 
-// 모달 설정 유지
+// 설정 모달
 const modal = document.getElementById('settings-modal');
 document.getElementById('btn-settings').addEventListener('click', () => {
   document.getElementById('inp-client-id').value = gSettings.clientId;
@@ -776,6 +796,7 @@ document.getElementById('btn-google-login').addEventListener('click', () => {
   if (tokenClient) tokenClient.requestAccessToken(); else showToast('Google 스크립트 로드 중이거나 환경을 확인하세요.');
 });
 
+// 초기화 실행
 initDB().then(() => {
   initGoogleGIS(); render();
 }).catch((e) => {
