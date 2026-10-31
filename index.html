@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>캔톤페어 3기 체크리스트</title>
+<style>
+  :root {
+    --primary: #2563eb;
+    --bg-main: #f1f5f9;
+    --bg-card: #ffffff;
+    --border: #e2e8f0;
+    --text-main: #1e293b;
+    --text-sub: #64748b;
+    --green: #22c55e;
+    --red: #ef4444;
+    --gray: #94a3b8;
+  }
+  * { box-sizing: border-box; font-family: -apple-system, "Malgun Gothic", sans-serif; margin: 0; padding: 0; }
+  body { background-color: #e2e8f0; display: flex; justify-content: center; min-height: 100vh; }
+  
+  #app {
+    width: 100%; max-width: 480px; background-color: var(--bg-main);
+    min-height: 100vh; position: relative; padding-bottom: 40px; box-shadow: 0 0 15px rgba(0,0,0,0.1);
+  }
+
+  /* Header */
+  .header {
+    position: sticky; top: 0; background-color: #fff; z-index: 100;
+    padding: 12px 16px; border-bottom: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+  .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .header-title { font-size: 17px; font-weight: bold; color: var(--text-main); }
+  .header-actions { display: flex; gap: 8px; }
+  .icon-btn { 
+    background: #f8fafc; border: 1px solid var(--border); border-radius: 6px; 
+    padding: 6px 10px; font-size: 14px; cursor: pointer; min-height: 36px; display: flex; align-items: center; justify-content: center;
+  }
+  .tabs { display: flex; gap: 8px; }
+  .tab-btn {
+    flex: 1; min-height: 44px; border: 1px solid var(--border); background: var(--bg-main);
+    border-radius: 8px; font-size: 14px; font-weight: bold; color: var(--text-sub); cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 6px; transition: 0.2s;
+  }
+  .tab-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+  .badge { background: var(--red); color: white; border-radius: 12px; padding: 2px 6px; font-size: 12px; font-weight: bold; }
+
+  /* Content */
+  .content { padding: 16px; }
+  .btn-add {
+    width: 100%; min-height: 48px; background: #fff; border: 2px dashed var(--primary);
+    color: var(--primary); font-size: 15px; font-weight: bold; border-radius: 10px;
+    margin-bottom: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  }
+  .empty-state { text-align: center; color: var(--text-sub); padding: 40px 20px; font-size: 14px; line-height: 1.5; }
+
+  /* Card */
+  .card {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px;
+    margin-bottom: 16px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  }
+  .card-header { padding: 16px; border-bottom: 1px solid var(--border); background: #f8fafc; display: flex; justify-content: space-between; align-items: flex-start; cursor: pointer; }
+  .card-header-info { flex: 1; cursor: default; }
+  .card-header-info input { width: 100%; border: 1px solid var(--border); border-radius: 6px; padding: 8px; margin-bottom: 8px; font-size: 15px; min-height: 44px; }
+  .priority-group { display: flex; gap: 4px; margin-bottom: 8px; }
+  .btn-priority { flex: 1; min-height: 40px; border: 1px solid var(--border); background: #fff; border-radius: 6px; font-size: 14px; font-weight: bold; color: var(--text-sub); cursor: pointer; }
+  .btn-priority.active { background: var(--text-main); color: #fff; border-color: var(--text-main); }
+  .btn-fold { background: none; border: 1px solid var(--border); border-radius: 6px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; color: var(--text-main); margin-left: 12px; }
+
+  .card-body { padding: 0; }
+  .card.folded .card-body, .card.folded .card-footer { display: none; }
+  
+  /* Checklist Items */
+  .check-item { padding: 16px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; }
+  .check-texts { display: flex; flex-direction: column; gap: 4px; margin-bottom: 6px; }
+  .txt-zh { font-size: 16px; font-weight: bold; color: #000; word-break: keep-all; overflow-wrap: anywhere; line-height: 1.3; }
+  .txt-en { font-size: 14px; color: #475569; }
+  .txt-ko { font-size: 13px; color: #94a3b8; }
+  
+  /* Input Types */
+  .toggle-group { display: flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; width: 100%; }
+  .toggle-btn { flex: 1; min-height: 40px; border: none; background: #fff; font-size: 16px; border-right: 1px solid var(--border); cursor: pointer; transition: 0.2s; font-weight:bold; }
+  .toggle-btn:last-child { border-right: none; }
+  .toggle-btn[data-val="✅"].active { background: var(--green); color: #fff; }
+  .toggle-btn[data-val="❌"].active { background: var(--red); color: #fff; }
+  .toggle-btn[data-val="—"].active { background: var(--gray); color: #fff; }
+  
+  .input-num { width: 100%; border: 1px solid var(--border); border-radius: 6px; padding: 10px; font-size: 15px; min-height: 44px; }
+  
+  .checkbox-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .check-label { display: flex; align-items: center; gap: 6px; font-size: 14px; padding: 8px 0; }
+  .check-label input { width: 18px; height: 18px; }
+
+  details { margin-top: 4px; }
+  summary { font-size: 13px; color: var(--primary); cursor: pointer; padding: 4px 0; font-weight: bold; display: inline-flex; }
+  .item-memo { width: 100%; border: 1px solid var(--border); border-radius: 6px; padding: 10px; font-size: 14px; margin-top: 6px; background: #f8fafc; }
+
+  /* Footer & Photos */
+  .card-footer { padding: 16px; background: #f8fafc; display: flex; flex-direction: column; gap: 12px; }
+  textarea { width: 100%; border: 1px solid var(--border); border-radius: 6px; padding: 10px; font-size: 14px; min-height: 80px; resize: vertical; }
+  
+  .photo-actions { display: flex; gap: 8px; }
+  .btn-photo-attach { flex: 1; min-height: 44px; background: #fff; border: 1px solid var(--border); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; cursor: pointer; gap: 6px; color: var(--text-main); }
+  .btn-upload-all { flex: 1; min-height: 44px; background: var(--primary); color: #fff; border: none; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; display: none; }
+  
+  .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 8px; margin-top: 8px; }
+  .photo-thumb-wrap { position: relative; width: 100%; aspect-ratio: 1; border-radius: 6px; overflow: hidden; border: 1px solid var(--border); background: #eee; }
+  .photo-thumb-wrap img { width: 100%; height: 100%; object-fit: cover; }
+  .photo-del { position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,0.6); color: #fff; border: none; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 12px; cursor: pointer; z-index: 2; }
+  .photo-cloud { position: absolute; top: 2px; left: 2px; font-size: 14px; z-index: 2; text-shadow: 0 0 2px #fff; }
+  .photo-upload-btn { position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(37,99,235,0.8); color: #fff; font-size: 11px; border: none; padding: 4px 0; cursor: pointer; z-index: 2; display: none; }
+
+  .btn-delete { width: 100%; min-height: 44px; background: #fff; border: 1px solid var(--red); color: var(--red); font-size: 15px; font-weight: bold; border-radius: 6px; cursor: pointer; }
+
+  /* Modal */
+  .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; display: none; justify-content: center; align-items: center; }
+  .modal { background: #fff; padding: 20px; border-radius: 12px; width: 90%; max-width: 400px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
+  .modal h3 { margin-bottom: 16px; font-size: 18px; }
+  .modal label { display: block; font-size: 13px; font-weight: bold; margin-bottom: 4px; color: var(--text-sub); }
+  .modal input { width: 100%; border: 1px solid var(--border); border-radius: 6px; padding: 10px; margin-bottom: 16px; font-size: 14px; }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+  .btn-modal { padding: 10px 16px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+  .btn-modal.cancel { background: var(--bg-main); color: var(--text-main); }
+  .btn-modal.save { background: var(--primary); color: #fff; }
+  
+  .auth-status { font-size: 13px; margin-bottom: 16px; padding: 10px; border-radius: 6px; background: #f8fafc; text-align: center; }
+  .btn-google { width: 100%; padding: 12px; background: #fff; border: 1px solid var(--border); border-radius: 6px; font-weight: bold; margin-bottom: 16px; cursor: pointer; display: flex; justify-content: center; gap: 8px; }
+
+  /* Toast */
+  .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 12px 20px; border-radius: 8px; font-size: 14px; z-index: 1000; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div class="header">
+    <div class="header-top">
+      <div class="header-title">캔톤페어 3기 체크리스트</div>
+      <div class="header-actions">
+        <button class="icon-btn" id="btn-export" title="CSV 내보내기">📄</button>
+        <button class="icon-btn" id="btn-download-photos" title="사진 일괄 다운로드">🖼️</button>
+        <button class="icon-btn" id="btn-settings" title="설정">⚙️</button>
+      </div>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="tab1">① 키네틱토이 <span class="badge" id="badge-tab1">0</span></button>
+      <button class="tab-btn" data-tab="tab2">② 제작(OEM/ODM) <span class="badge" id="badge-tab2">0</span></button>
+    </div>
+  </div>
+  <div class="content" id="content"></div>
+</div>
+
+<div class="modal-overlay" id="settings-modal">
+  <div class="modal">
+    <h3>설정 및 구글 드라이브 연동</h3>
+    <div class="auth-status" id="auth-status-text">상태: 미설정</div>
+    <button class="btn-google" id="btn-google-login">☁️ Google 로그인</button>
+    <label>Google OAuth Client ID</label>
+    <input type="text" id="inp-client-id" placeholder="12345...apps.googleusercontent.com">
+    <label>Drive 폴더 ID</label>
+    <input type="text" id="inp-folder-id" placeholder="Drive 폴더 URL의 고유 ID">
+    <div style="font-size: 12px; color: var(--text-sub); margin-bottom: 16px;">
+      * 구글 로그인은 HTTPS 환경(또는 localhost)에서만 동작합니다.<br>
+      * 설정하지 않아도 앱의 모든 기능(오프라인 저장 등)은 정상 동작합니다.
+    </div>
+    <div class="modal-actions">
+      <button class="btn-modal cancel" id="btn-modal-close">닫기</button>
+      <button class="btn-modal save" id="btn-modal-save">저장</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const CHECKLIST_DATA = {
+  tab1: [
+    { type: 'A', zh: "这是目前正在量产的产品吗？", en: "Is this currently in mass production?", ko: "이 제품은 현재 양산 중인가요?" },
+    { type: 'B', zh: "单色单款的MOQ是多少？", en: "What is the MOQ for single color / single model?", ko: "단일 색상·단일 모델 기준 MOQ는 얼마인가요?" },
+    { type: 'A', zh: "混色或混款可以凑单达到MOQ吗？", en: "Can mixed colors or mixed models be combined to meet MOQ?", ko: "혼색이나 혼합 모델로 MOQ를 채울 수 있나요?" },
+    { type: 'C', options: ['자체', '외주', '혼합'], zh: "机芯、齿轮、马达是自制还是外购？", en: "Are the movement, gears, and motor made in-house or outsourced?", ko: "무브먼트·기어·모터는 자체 제작인가요, 외주인가요?" },
+    { type: 'A', zh: "能协助提供韩国KC认证所需的资料吗？以前有做过KC认证吗？", en: "Can you support the documents needed for Korean KC certification?", ko: "한국 KC 인증에 필요한 자료를 지원해 줄 수 있나요? 이전에 KC 인증을 진행해 본 적이 있나요?" },
+    { type: 'A', zh: "可以印我们的Logo或改包装吗？", en: "Can you print our logo or customize the packaging?", ko: "저희 로고 인쇄나 포장 커스터마이징이 가능한가요?" }
+  ],
+  tab2: [
+    { type: 'C', options: ['공장', '무역회사', '공장+무역'], zh: "贵公司是工厂还是贸易公司？", en: "Is your company a factory or a trading company?", ko: "귀사는 공장인가요, 무역회사인가요?" },
+    { type: 'A', zh: "有自己的注塑车间和组装线吗？", en: "Do you have your own injection molding and assembly lines?", ko: "자체 사출 작업장과 조립라인이 있나요?" },
+    { type: 'A', zh: "有ODM设计团队吗？可以从结构设计开始做吗？", en: "Do you have an ODM design team? Can you start from structural design?", ko: "ODM 설계팀이 있나요? 구조 설계부터 진행할 수 있나요?" },
+    { type: 'B', zh: "新开模的MOQ是多少？", en: "What is the MOQ for a new mold?", ko: "신규 금형을 열 때 MOQ는 얼마인가요?" },
+    { type: 'B', zh: "如果用你们现有模具加我们的Logo，MOQ可以降到多少？", en: "If we use your existing mold with our logo, how low can the MOQ go?", ko: "기존 금형에 저희 로고만 넣는 방식이면 MOQ를 얼마까지 낮출 수 있나요?" },
+    { type: 'BC', options: ['공급업체', '발주처', '협의'], zh: "模具费大约多少？模具所有权归谁？", en: "What is the approximate mold cost? Who owns the mold?", ko: "금형비는 대략 얼마인가요? 금형 소유권은 누구에게 있나요?" },
+    { type: 'A', zh: "能协助提供韩国KC认证所需的资料吗？以前有做过KC认证吗？", en: "Can you support the documents needed for Korean KC certification?", ko: "한국 KC 인증에 필요한 자료를 지원해 줄 수 있나요? 이전에 KC 인증을 진행해 본 적이 있나요?" }
+  ]
+};
+
+let appState = { tab1: [], tab2: [] };
+try {
+  const stored = JSON.parse(localStorage.getItem('cantonFair_v2'));
+  if (stored && Array.isArray(stored.tab1) && Array.isArray(stored.tab2)) {
+    appState = stored;
+  }
+} catch(e) { console.warn("저장소 데이터 초기화 오류:", e); }
+
+let currentTab = 'tab1';
+const DB_NAME = 'canton_fair_db';
+const STORE_NAME = 'photos';
+let db;
+
+function initDB() {
+  return new Promise((resolve, reject) => {
+    try {
+      if (!window.indexedDB) return reject('indexedDB 지원 안됨');
+      const request = indexedDB.open(DB_NAME, 1);
+      request.onupgradeneeded = (e) => {
+        const _db = e.target.result;
+        if (!_db.objectStoreNames.contains(STORE_NAME)) {
+          const store = _db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+          store.createIndex('cardId', 'cardId', { unique: false });
+        }
+      };
+      request.onsuccess = (e) => { db = e.target.result; resolve(); };
+      request.onerror = (e) => { reject(e); };
+    } catch (e) { reject(e); }
+  });
+}
+
+const IDB = {
+  savePhoto: (photo) => new Promise((res) => {
+    if(!db) return res();
+    try {
+      const tx = db.transaction([STORE_NAME], 'readwrite');
+      tx.objectStore(STORE_NAME).put(photo);
+      tx.oncomplete = res; tx.onerror = res;
+    } catch(e) { res(); }
+  }),
+  getPhotosByCard: (cardId) => new Promise((res) => {
+    if(!db) return res([]);
+    try {
+      const tx = db.transaction([STORE_NAME], 'readonly');
+      const request = tx.objectStore(STORE_NAME).index('cardId').getAll(cardId);
+      request.onsuccess = () => res(request.result || []);
+      request.onerror = () => res([]);
+    } catch(e) { res([]); }
+  }),
+  getAllPhotos: () => new Promise((res) => {
+    if(!db) return res([]);
+    try {
+      const tx = db.transaction([STORE_NAME], 'readonly');
+      const request = tx.objectStore(STORE_NAME).getAll();
+      request.onsuccess = () => res(request.result || []);
+      request.onerror = () => res([]);
+    } catch(e) { res([]); }
+  }),
+  deletePhoto: (id) => new Promise((res) => {
+    if(!db) return res();
+    try {
+      const tx = db.transaction([STORE_NAME], 'readwrite');
+      tx.objectStore(STORE_NAME).delete(id);
+      tx.oncomplete = res; tx.onerror = res;
+    } catch(e) { res(); }
+  }),
+  deletePhotosByCard: async (cardId) => {
+    try {
+      const photos = await IDB.getPhotosByCard(cardId);
+      for (let p of photos) { await IDB.deletePhoto(p.id); }
+    } catch(e) {}
+  }
+};
+
+function saveState() {
+  try {
+    localStorage.setItem('cantonFair_v2', JSON.stringify(appState));
+    document.getElementById('badge-tab1').innerText = (appState.tab1 || []).length;
+    document.getElementById('badge-tab2').innerText = (appState.tab2 || []).length;
+  } catch(e) {
+    showToast('저장 용량 초과. 캐시를 비워주세요.');
+  }
+}
+
+function getNowLocal() {
+  const now = new Date();
+  const pad = n => n.toString().padStart(2, '0');
+  return `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+}
+
+function escapeHtml(str) { 
+  return String(str || '').replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); 
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.innerText = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+let gSettings = JSON.parse(localStorage.getItem('canton_gSettings')) || { clientId: '', folderId: '' };
+let gToken = null, tokenClient = null, isGoogleReady = false;
+
+function initGoogleGIS() {
+  if (window.location.protocol === 'file:') return;
+  try {
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true; script.defer = true;
+    script.onload = () => { isGoogleReady = true; if (gSettings.clientId) setupTokenClient(); };
+    document.head.appendChild(script);
+  } catch(e) {}
+}
+
+function setupTokenClient() {
+  if (!isGoogleReady || !gSettings.clientId) return;
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: gSettings.clientId,
+    scope: 'https://www.googleapis.com/auth/drive.file',
+    callback: (response) => {
+      if (response && response.access_token) {
+        gToken = response.access_token;
+        updateAuthUI('로그인됨 (토큰 발급 완료)');
+        render();
+      }
+    }
+  });
+}
+
+function updateAuthUI(statusStr) {
+  const el = document.getElementById('auth-status-text');
+  if (el) el.innerText = '상태: ' + statusStr;
+}
+
+async function uploadDrive(photoId, cardId, fileBlob) {
+  if (!gToken || !gSettings.folderId) { showToast('설정에서 로그인이 필요합니다.'); return false; }
+  const card = appState[currentTab].find(c => String(c.id) === String(cardId)) || appState[currentTab === 'tab1' ? 'tab2' : 'tab1'].find(c => String(c.id) === String(cardId));
+  if (!card) return false;
+  
+  const booth = card.booth || '부스미상', name = card.name || '업체미상';
+  const dateStr = new Date().toISOString().replace(/[:\-T]/g,'').slice(0,14);
+  const metadata = { name: `${booth}_${name}_${dateStr}.jpg`, parents: [gSettings.folderId] };
+  const boundary = '-------314159265358979323846';
+  const delimiter = '\r\n--' + boundary + '\r\n', close_delim = '\r\n--' + boundary + '--';
+  const metaStr = delimiter + 'Content-Type: application/json; charset=UTF-8\r\n\r\n' + JSON.stringify(metadata) + '\r\n';
+  const fileStr = delimiter + 'Content-Type: image/jpeg\r\n\r\n';
+  
+  const payload = new Blob([metaStr, fileStr, fileBlob, close_delim], { type: 'multipart/related; boundary=' + boundary });
+
+  try {
+    const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+      method: 'POST', headers: { 'Authorization': 'Bearer ' + gToken }, body: payload
+    });
+    if (res.status === 401) { gToken = null; updateAuthUI('토큰 만료됨 (재로그인 필요)'); render(); showToast('로그인이 만료되었습니다.'); return false; }
+    if (!res.ok) throw new Error('Upload failed');
+    
+    const photos = await IDB.getPhotosByCard(cardId);
+    const photo = photos.find(p => p.id === photoId);
+    if(photo) { photo.uploaded = true; await IDB.savePhoto(photo); }
+    return true;
+  } catch(e) {
+    showToast('업로드 실패. 네트워크를 확인하세요.'); return false;
+  }
+}
+
+function getInitAns(type) {
+  if (type === 'A') return '—';
+  if (type === 'B') return '';
+  if (type === 'C') return [];
+  if (type === 'BC') return { num: '', checks: [] };
+}
+
+function renderInputUI(q, idx, cardId, ans) {
+  if (q.type === 'A') {
+    return `<div class="toggle-group">
+      <button class="toggle-btn ${ans==='✅'?'active':''}" data-action="toggle" data-id="${cardId}" data-idx="${idx}" data-val="✅">✅</button>
+      <button class="toggle-btn ${ans==='❌'?'active':''}" data-action="toggle" data-id="${cardId}" data-idx="${idx}" data-val="❌">❌</button>
+      <button class="toggle-btn ${ans==='—'?'active':''}" data-action="toggle" data-id="${cardId}" data-idx="${idx}" data-val="—">—</button>
+    </div>`;
+  }
+  if (q.type === 'B') return `<input type="number" inputmode="numeric" class="input-num" data-action="input-b" data-id="${cardId}" data-idx="${idx}" placeholder="숫자 입력" value="${escapeHtml(ans)}">`;
+  
+  if (q.type === 'C') {
+    let opts = q.options.map(o => `<label class="check-label"><input type="checkbox" data-action="check-c" data-id="${cardId}" data-idx="${idx}" value="${o}" ${(Array.isArray(ans) && ans.includes(o))?'checked':''}> ${o}</label>`).join('');
+    return `<div class="checkbox-grid">${opts}</div>`;
+  }
+  
+  if (q.type === 'BC') {
+    let numVal = (ans && ans.num) ? ans.num : '';
+    let checksArr = (ans && Array.isArray(ans.checks)) ? ans.checks : [];
+    let opts = q.options.map(o => `<label class="check-label"><input type="checkbox" data-action="check-bc" data-id="${cardId}" data-idx="${idx}" value="${o}" ${checksArr.includes(o)?'checked':''}> ${o}</label>`).join('');
+    return `<input type="number" inputmode="numeric" class="input-num" style="margin-bottom:8px;" data-action="input-bc" data-id="${cardId}" data-idx="${idx}" placeholder="숫자 입력" value="${escapeHtml(numVal)}">
+      <div class="checkbox-grid">${opts}</div>`;
+  }
+  return '';
+}
+
+async function render() {
+  const content = document.getElementById('content');
+  const cards = appState[currentTab] || [];
+  let html = `<button class="btn-add" id="btn-add">＋ 새 업체 추가</button>`;
+
+  if (cards.length === 0) {
+    html += `<div class="empty-state">아직 등록된 업체가 없습니다.<br>'＋ 새 업체 추가'를 눌러 시작하세요.</div>`;
+    content.innerHTML = html;
+  } else {
+    content.innerHTML = html + `<div id="cards-container"></div>`;
+    const container = document.getElementById('cards-container');
+    
+    for (let card of cards) {
+      try {
+        const cardDiv = document.createElement('div');
+        cardDiv.className = `card ${card.folded ? 'folded' : ''}`;
+        cardDiv.dataset.id = card.id;
+
+        let checklistHtml = '';
+        CHECKLIST_DATA[currentTab].forEach((q, idx) => {
+          let chk = (card.checks && card.checks[idx]) ? card.checks[idx] : { ans: getInitAns(q.type), memo: '' };
+          let ans = (chk.ans !== undefined) ? chk.ans : ((chk.status !== undefined) ? chk.status : getInitAns(q.type));
+          
+          if (q.type === 'C' && !Array.isArray(ans)) ans = [];
+          if (q.type === 'BC' && (!ans || typeof ans !== 'object')) ans = { num: '', checks: [] };
+
+          checklistHtml += `
+            <div class="check-item">
+              <div class="check-texts"><div class="txt-zh">${q.zh}</div><div class="txt-en">${q.en}</div><div class="txt-ko">${q.ko}</div></div>
+              ${renderInputUI(q, idx, card.id, ans)}
+              <details ${chk.memo ? 'open' : ''}>
+                <summary>+ 항목 메모</summary>
+                <input type="text" class="item-memo" data-action="item-memo" data-id="${card.id}" data-idx="${idx}" placeholder="메모" value="${escapeHtml(chk.memo)}">
+              </details>
+            </div>`;
+        });
+
+        const photos = await IDB.getPhotosByCard(card.id);
+        let photosHtml = '';
+        const canUpload = !!gToken;
+        photos.forEach(p => {
+          const url = URL.createObjectURL(p.blob);
+          photosHtml += `
+            <div class="photo-thumb-wrap">
+              ${p.uploaded ? '<div class="photo-cloud">☁️</div>' : ''}
+              <button class="photo-del" data-action="del-photo" data-photoid="${p.id}" data-id="${card.id}">✕</button>
+              <img src="${url}">
+              ${canUpload && !p.uploaded ? `<button class="photo-upload-btn" data-action="up-photo" data-photoid="${p.id}" data-id="${card.id}">업로드</button>` : ''}
+            </div>`;
+        });
+
+        cardDiv.innerHTML = `
+          <div class="card-header" data-action="fold" data-id="${card.id}">
+            <div class="card-header-info">
+              <input type="text" data-action="card-inp" name="name" data-id="${card.id}" placeholder="업체명" value="${escapeHtml(card.name)}">
+              <input type="text" data-action="card-inp" name="booth" data-id="${card.id}" placeholder="부스번호" value="${escapeHtml(card.booth)}">
+              <input type="datetime-local" data-action="card-inp" name="date" data-id="${card.id}" value="${card.date}">
+              <div class="priority-group">
+                <button class="btn-priority ${card.priority==='A'?'active':''}" data-action="priority" data-id="${card.id}" data-val="A">A</button>
+                <button class="btn-priority ${card.priority==='B'?'active':''}" data-action="priority" data-id="${card.id}" data-val="B">B</button>
+                <button class="btn-priority ${card.priority==='C'?'active':''}" data-action="priority" data-id="${card.id}" data-val="C">C</button>
+              </div>
+            </div>
+            <button class="btn-fold">${card.folded ? '▼' : '▲'}</button>
+          </div>
+          <div class="card-body">${checklistHtml}</div>
+          <div class="card-footer">
+            <textarea data-action="card-inp" name="memo" data-id="${card.id}" placeholder="종합 메모">${escapeHtml(card.memo)}</textarea>
+            <input type="text" data-action="card-inp" name="wechat" class="input-num" data-id="${card.id}" placeholder="WeChat ID" value="${escapeHtml(card.wechat)}">
+            
+            <div class="photo-actions">
+              <label class="btn-photo-attach">📷 사진 첨부<input type="file" hidden multiple accept="image/*" capture="environment" data-action="attach" data-id="${card.id}"></label>
+              <button class="btn-upload-all" style="display:${canUpload && photos.length>0 ? 'block':'none'}" data-action="up-all" data-id="${card.id}">전체 업로드</button>
+            </div>
+            <div class="photo-grid">${photosHtml}</div>
+            <button class="btn-delete" data-action="del-card" data-id="${card.id}">이 카드 삭제</button>
+          </div>`;
+        container.appendChild(cardDiv);
+      } catch (err) { console.error("카드 렌더링 에러:", err, card); }
+    }
+  }
+  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.tab === currentTab));
+  saveState();
+}
+
+// 스크롤 튕김 방지 처리 적용된 이벤트 리스너
+document.getElementById('app').addEventListener('click', async (e) => {
+  const target = e.target;
+  
+  // 탭 변경 시 화면 맨 위로
+  if (target.closest('.tab-btn')) { 
+    currentTab = target.closest('.tab-btn').dataset.tab; 
+    render(); 
+    window.scrollTo(0,0); 
+    return; 
+  }
+  
+  if (target.id === 'btn-add' || target.closest('#btn-add')) {
+    appState[currentTab].unshift({
+      id: Date.now().toString(), name: '', booth: '', date: getNowLocal(), priority: '', memo: '', wechat: '', folded: false,
+      checks: CHECKLIST_DATA[currentTab].map(q => ({ ans: getInitAns(q.type), memo: '' }))
+    });
+    render(); return;
+  }
+  
+  const act = target.dataset.action || (target.closest('[data-action]') && target.closest('[data-action]').dataset.action);
+  const id = target.dataset.id || (target.closest('[data-id]') && target.closest('[data-id]').dataset.id);
+  if(!act || !id) return;
+
+  if (act === 'del-card') {
+    if (confirm('이 카드를 삭제하시겠습니까?\n첨부된 사진도 삭제됩니다.')) {
+      try { await IDB.deletePhotosByCard(id); } catch(e) {}
+      appState.tab1 = (appState.tab1 || []).filter(c => String(c.id) !== String(id));
+      appState.tab2 = (appState.tab2 || []).filter(c => String(c.id) !== String(id));
+      render();
+    }
+    return;
+  }
+
+  const card = appState[currentTab].find(c => String(c.id) === String(id));
+  if(!card && !['del-photo', 'up-photo'].includes(act)) return;
+
+  // 카드 접기: 화면 전체 새로고침 없이 CSS 클래스만 토글
+  if (act === 'fold') {
+    if (target.closest('.card-header-info') || target.tagName === 'INPUT') return; 
+    card.folded = !card.folded; 
+    saveState();
+    const cardDiv = target.closest('.card');
+    card.folded ? cardDiv.classList.add('folded') : cardDiv.classList.remove('folded');
+    cardDiv.querySelector('.btn-fold').innerText = card.folded ? '▼' : '▲';
+    return; 
+  }
+  
+  // 우선순위 클릭: 해당 그룹 내 버튼 디자인 즉시 교체
+  if (act === 'priority') { 
+    card.priority = target.dataset.val; 
+    saveState();
+    const group = target.closest('.priority-group');
+    group.querySelectorAll('.btn-priority').forEach(b => b.classList.remove('active'));
+    target.classList.add('active');
+    return; 
+  }
+  
+  // 질문 체크(3단 토글): 해당 그룹 내 버튼 디자인 즉시 교체
+  if (act === 'toggle') {
+    if(card.checks[target.dataset.idx]) {
+      card.checks[target.dataset.idx].ans = target.dataset.val; 
+      saveState();
+      const group = target.closest('.toggle-group');
+      group.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+      target.classList.add('active');
+    }
+    return;
+  }
+  
+  if (act === 'del-photo') { 
+    const scrollPos = window.scrollY;
+    await IDB.deletePhoto(target.dataset.photoid); 
+    await render(); 
+    setTimeout(() => window.scrollTo(0, scrollPos), 10);
+    return; 
+  }
+  
+  if (act === 'up-photo') {
+    target.innerText = '...';
+    const photos = await IDB.getPhotosByCard(id);
+    const photo = photos.find(p => p.id === target.dataset.photoid);
+    if(photo) {
+      let success = await uploadDrive(photo.id, id, photo.blob);
+      if(success) { 
+        showToast('업로드 성공'); 
+        const wrap = target.closest('.photo-thumb-wrap');
+        if(wrap && !wrap.querySelector('.photo-cloud')) {
+          wrap.insertAdjacentHTML('afterbegin', '<div class="photo-cloud">☁️</div>');
+        }
+        target.remove();
+      }
+      else target.innerText = '업로드';
+    }
+    return;
+  }
+  
+  if (act === 'up-all') {
+    target.innerText = '업로드 중...';
+    const photos = await IDB.getPhotosByCard(id);
+    let count = 0;
+    for (let p of photos) {
+      if(!p.uploaded) { let success = await uploadDrive(p.id, id, p.blob); if(success) count++; }
+    }
+    showToast(`${count}장 업로드 완료`); 
+    const scrollPos = window.scrollY;
+    await render();
+    setTimeout(() => window.scrollTo(0, scrollPos), 10);
+    return;
+  }
+});
+
+document.getElementById('app').addEventListener('input', (e) => {
+  const target = e.target, act = target.dataset.action, id = target.dataset.id;
+  if(!act || !id) return;
+  const card = appState[currentTab].find(c => String(c.id) === String(id));
+  if(!card) return;
+
+  if (act === 'card-inp') { card[target.name] = target.value; saveState(); }
+  if (act === 'item-memo' && card.checks[target.dataset.idx]) { 
+    card.checks[target.dataset.idx].memo = target.value; saveState(); 
+  }
+  if (act === 'input-b' && card.checks[target.dataset.idx]) { 
+    card.checks[target.dataset.idx].ans = target.value; saveState(); 
+  }
+  if (act === 'input-bc' && card.checks[target.dataset.idx]) {
+    if (!card.checks[target.dataset.idx].ans || typeof card.checks[target.dataset.idx].ans !== 'object') {
+      card.checks[target.dataset.idx].ans = { num: '', checks: [] };
+    }
+    card.checks[target.dataset.idx].ans.num = target.value; 
+    saveState(); 
+  }
+});
+
+document.getElementById('app').addEventListener('change', async (e) => {
+  const target = e.target, act = target.dataset.action, id = target.dataset.id;
+  if(!act || !id) return;
+  const card = appState[currentTab].find(c => String(c.id) === String(id));
+  
+  if (act === 'check-c' && card && card.checks[target.dataset.idx]) {
+    const arr = Array.from(target.closest('.checkbox-grid').querySelectorAll('input:checked')).map(el => el.value);
+    card.checks[target.dataset.idx].ans = arr; saveState();
+  }
+  if (act === 'check-bc' && card && card.checks[target.dataset.idx]) {
+    if (!card.checks[target.dataset.idx].ans || typeof card.checks[target.dataset.idx].ans !== 'object') {
+      card.checks[target.dataset.idx].ans = { num: '', checks: [] };
+    }
+    const arr = Array.from(target.closest('.checkbox-grid').querySelectorAll('input:checked')).map(el => el.value);
+    card.checks[target.dataset.idx].ans.checks = arr; saveState();
+  }
+  
+  if (act === 'attach') {
+    const files = target.files;
+    if(!files.length) return;
+    for(let f of files) {
+      const pid = id + '_' + Date.now() + Math.floor(Math.random()*1000);
+      await IDB.savePhoto({ id: pid, cardId: id, blob: f, createdAt: Date.now(), uploaded: false });
+    }
+    target.value = ''; 
+    const scrollPos = window.scrollY;
+    await render();
+    setTimeout(() => window.scrollTo(0, scrollPos), 10);
+  }
+});
+
+function escapeCsv(str) { return `"${(str || '').toString().replace(/"/g, '""')}"`; }
+function formatAns(q, ans) {
+  if (q.type === 'C') return Array.isArray(ans) ? ans.join(';') : '';
+  if (q.type === 'BC') {
+    const num = (ans && ans.num) ? ans.num : '';
+    const arr = (ans && Array.isArray(ans.checks)) ? ans.checks.join(';') : '';
+    return `${num} / ${arr}`;
+  }
+  return ans;
+}
+
+document.getElementById('btn-export').addEventListener('click', async () => {
+  let csv = "\uFEFF탭,업체명,부스번호,방문일시,우선순위,항목번호,중국어,응답값,항목메모,종합메모,WeChat ID,사진수\n";
+  for (let tabKey of ['tab1', 'tab2']) {
+    const tabName = tabKey === 'tab1' ? "키네틱토이" : "제작(OEM/ODM)";
+    for (let card of appState[tabKey]) {
+      const photos = await IDB.getPhotosByCard(card.id);
+      const base = `${escapeCsv(tabName)},${escapeCsv(card.name)},${escapeCsv(card.booth)},${escapeCsv(card.date)},${escapeCsv(card.priority)}`;
+      card.checks.forEach((chk, idx) => {
+        const q = CHECKLIST_DATA[tabKey][idx];
+        const ansStr = formatAns(q, chk.ans);
+        csv += `${base},${idx+1},${escapeCsv(q.zh)},${escapeCsv(ansStr)},${escapeCsv(chk.memo)},${escapeCsv(card.memo)},${escapeCsv(card.wechat)},${photos.length}\n`;
+      });
+    }
+  }
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `canton_fair_checklist_${new Date().toISOString().slice(0,10).replace(/-/g,'')}.csv`;
+  a.click();
+});
+
+document.getElementById('btn-download-photos').addEventListener('click', async () => {
+  const photos = await IDB.getAllPhotos();
+  if (!photos.length) { showToast('다운로드할 사진이 없습니다.'); return; }
+  
+  showToast('순차 다운로드를 시작합니다...');
+  for (let i=0; i<photos.length; i++) {
+    const p = photos[i];
+    let card = appState.tab1.find(c => String(c.id) === String(p.cardId)) || appState.tab2.find(c => String(c.id) === String(p.cardId));
+    if (!card) continue;
+    
+    const booth = card.booth || '부스미상', name = card.name || '업체미상';
+    const url = URL.createObjectURL(p.blob);
+    const a = document.createElement('a'); a.href = url;
+    a.download = `${booth}_${name}_${i+1}.jpg`; a.click();
+    URL.revokeObjectURL(url);
+    await new Promise(r => setTimeout(r, 400));
+  }
+});
+
+const modal = document.getElementById('settings-modal');
+document.getElementById('btn-settings').addEventListener('click', () => {
+  document.getElementById('inp-client-id').value = gSettings.clientId;
+  document.getElementById('inp-folder-id').value = gSettings.folderId;
+  updateAuthUI(gToken ? '로그인됨' : (gSettings.clientId ? '미로그인 (버튼을 눌러 로그인)' : '설정 필요'));
+  modal.style.display = 'flex';
+});
+document.getElementById('btn-modal-close').addEventListener('click', () => modal.style.display = 'none');
+document.getElementById('btn-modal-save').addEventListener('click', () => {
+  gSettings.clientId = document.getElementById('inp-client-id').value.trim();
+  gSettings.folderId = document.getElementById('inp-folder-id').value.trim();
+  localStorage.setItem('canton_gSettings', JSON.stringify(gSettings));
+  setupTokenClient(); modal.style.display = 'none'; showToast('설정이 저장되었습니다.'); render();
+});
+document.getElementById('btn-google-login').addEventListener('click', () => {
+  if (!gSettings.clientId) { showToast('Client ID를 먼저 저장하세요.'); return; }
+  if (tokenClient) tokenClient.requestAccessToken(); else showToast('Google 스크립트 로드 중이거나 환경을 확인하세요.');
+});
+
+// 시작
+initDB().then(() => {
+  initGoogleGIS(); render();
+}).catch((e) => {
+  console.warn("IndexedDB 초기화 실패 (사진 첨부 기능 제한됨):", e);
+  initGoogleGIS(); render();
+});
+</script>
+</body>
+</html>
